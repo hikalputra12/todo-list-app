@@ -9,7 +9,7 @@ describe('Washi Focus App Integration', () => {
 
   it('allows adding a task, viewing the timer, and toggling focus completion', async () => {
     render(<App />);
-    expect(screen.getByText(/Washi Focus/i)).toBeInTheDocument();
+    expect(screen.getByText(/Waktu Tenang/i)).toBeInTheDocument();
     expect(screen.getByText('25:00')).toBeInTheDocument();
 
     // Add a new daily focus task

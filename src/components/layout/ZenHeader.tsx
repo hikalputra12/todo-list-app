@@ -6,7 +6,7 @@ interface ZenHeaderProps {
 }
 
 export const ZenHeader: React.FC<ZenHeaderProps> = ({
-  title = 'Washi Focus',
+  title,
   subtitle = 'Waktu Tenang',
 }) => {
   // Format Indonesian date: e.g. "Kamis, 12 November"
@@ -18,18 +18,20 @@ export const ZenHeader: React.FC<ZenHeaderProps> = ({
   });
 
   return (
-    <header className="flex flex-col items-center text-center my-3 transition-all">
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-[10px] tracking-widest uppercase px-2 py-0.5 rounded-full border border-[#E7E0D6] bg-[#F5F1EB] text-[#78716C]">
+    <header className="flex flex-col items-center text-center my-3 transition-all select-none">
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] tracking-widest uppercase px-2.5 py-0.5 rounded-full border border-[#E7E0D6] bg-[#F5F1EB] text-[#78716C]">
           {subtitle}
         </span>
         <span className="text-xs text-[#78716C] font-mono">
           {dateStr}
         </span>
       </div>
-      <h1 className="text-2xl font-serif tracking-wide text-[#2D2A26] font-normal">
-        {title}
-      </h1>
+      {title && (
+        <h1 className="text-2xl font-serif tracking-wide text-[#2D2A26] font-normal mt-1">
+          {title}
+        </h1>
+      )}
       <div className="w-8 h-[1px] bg-[#C49767] opacity-60 mt-2"></div>
     </header>
   );

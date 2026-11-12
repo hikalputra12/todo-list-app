@@ -141,7 +141,7 @@ export default function App() {
   return (
     <WashiContainer>
       {/* Poetic Header */}
-      <ZenHeader title="Washi Focus" subtitle="Waktu Tenang" />
+      <ZenHeader subtitle="Waktu Tenang" />
 
       {/* Ensō Pomodoro Timer */}
       <EnsoTimer
