@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #FBF9F5;
+    color: #2D2A26;
+    font-feature-settings: "palt" 1;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Subtle washi paper texture styling */
+.washi-paper-bg {
+  background-color: #FBF9F5;
+  background-image: radial-gradient(#2D2A26 0.4px, transparent 0.4px);
+  background-size: 24px 24px;
+  background-position: -19px -19px;
+  background-opacity: 0.03;
+}
+
+/* Safe area insets for mobile devices */
+.safe-bottom {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+}
