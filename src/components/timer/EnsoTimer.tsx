@@ -7,9 +7,11 @@ interface EnsoTimerProps {
   isRunning: boolean;
   mode: TimerMode;
   progress: number; // 0 to 1
+  focusDuration?: number;
   onToggle: () => void;
   onReset: () => void;
   onSwitchMode: (mode: TimerMode) => void;
+  onSetFocusDuration?: (minutes: number) => void;
 }
 
 export const EnsoTimer: React.FC<EnsoTimerProps> = ({
@@ -17,9 +19,11 @@ export const EnsoTimer: React.FC<EnsoTimerProps> = ({
   isRunning,
   mode,
   progress,
+  focusDuration = 25,
   onToggle,
   onReset,
   onSwitchMode,
+  onSetFocusDuration = () => {},
 }) => {
   // Format seconds to MM:SS
   const minutes = Math.floor(timeLeft / 60);
@@ -82,18 +86,20 @@ export const EnsoTimer: React.FC<EnsoTimerProps> = ({
             {timeFormatted}
           </span>
           <span className="text-[11px] font-serif uppercase tracking-widest text-[#78716C] mt-1">
-            {mode === 'focus' ? 'Fokus Hening' : 'Rehat Sejenak'}
+            {mode === 'focus' ? `Fokus ${focusDuration}m` : 'Rehat Sejenak'}
           </span>
         </div>
       </div>
 
-      {/* Timer Controls (Buttons & Switcher) */}
+      {/* Timer Controls (Buttons, Presets, Switcher) */}
       <TimerControls
         isRunning={isRunning}
         mode={mode}
+        focusDuration={focusDuration}
         onToggle={onToggle}
         onReset={onReset}
         onSwitchMode={onSwitchMode}
+        onSetFocusDuration={onSetFocusDuration}
       />
     </section>
   );

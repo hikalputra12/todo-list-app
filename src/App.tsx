@@ -28,7 +28,7 @@ export default function App() {
   } = useZenAudio();
 
   // Pomodoro Timer Hook
-  const { timerState, start, pause, reset, switchMode, progress } = usePomodoro(() => {
+  const { timerState, start, pause, reset, switchMode, setFocusDuration, progress } = usePomodoro(() => {
     playChime();
   });
 
@@ -149,9 +149,11 @@ export default function App() {
         isRunning={timerState.isRunning}
         mode={timerState.mode}
         progress={progress}
+        focusDuration={timerState.settings.focusDuration}
         onToggle={() => (timerState.isRunning ? pause() : start())}
         onReset={reset}
         onSwitchMode={switchMode}
+        onSetFocusDuration={setFocusDuration}
       />
 
       {/* Daily 3-5 Focus List */}

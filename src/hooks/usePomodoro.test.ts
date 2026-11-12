@@ -60,4 +60,14 @@ describe('usePomodoro', () => {
     expect(result.current.timerState.mode).toBe('shortBreak');
     expect(result.current.timerState.timeLeft).toBe(300);
   });
+
+  it('allows customizing focus duration in minutes and updates timeLeft when in focus mode', () => {
+    const { result } = renderHook(() => usePomodoro());
+
+    act(() => {
+      result.current.setFocusDuration(50);
+    });
+    expect(result.current.timerState.settings.focusDuration).toBe(50);
+    expect(result.current.timerState.timeLeft).toBe(3000);
+  });
 });

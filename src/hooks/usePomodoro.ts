@@ -9,7 +9,7 @@ const DEFAULT_SETTINGS = {
 };
 
 export function usePomodoro(onComplete?: () => void) {
-  const [settings] = useLocalStorage('washi_timer_settings_v1', DEFAULT_SETTINGS);
+  const [settings, setSettings] = useLocalStorage('washi_timer_settings_v1', DEFAULT_SETTINGS);
 
   const getDurationForMode = useCallback(
     (mode: TimerMode): number => {
@@ -34,6 +34,23 @@ export function usePomodoro(onComplete?: () => void) {
   });
 
   const lastTimestampRef = useRef<number | null>(null);
+
+  const setFocusDuration = useCallback(
+    (minutes: number) => {
+      const validMinutes = Math.max(1, Math.min(240, Math.round(minutes)));
+      setSettings((prev) => ({ ...prev, focusDuration: validMinutes }));
+      setTimerState((prev) => {
+        const nextSettings = { ...prev.settings, focusDuration: validMinutes };
+        const isCurrentFocus = prev.mode === 'focus';
+        return {
+          ...prev,
+          settings: nextSettings,
+          timeLeft: isCurrentFocus && !prev.isRunning ? validMinutes * 60 : prev.timeLeft,
+        };
+      });
+    },
+    [setSettings]
+  );
 
   const start = useCallback(() => {
     lastTimestampRef.current = Date.now();
@@ -118,6 +135,7 @@ export function usePomodoro(onComplete?: () => void) {
     pause,
     reset,
     switchMode,
+    setFocusDuration,
     progress,
   };
 }
