@@ -1,6 +1,6 @@
 import React from 'react';
-import { TodoItem as TodoItemType } from '../../types';
-import { TodoItem } from './TodoItem';
+import { TodoItem } from '../../types';
+import { TodoItem as TodoItemComponent } from './TodoItem';
 import { TodoInput } from './TodoInput';
 import { BookOpen, Sparkles } from 'lucide-react';
 
@@ -83,7 +83,7 @@ export const DailyFocusBoard: React.FC<DailyFocusBoardProps> = ({
           </div>
         ) : (
           dailyTodos.map((todo) => (
-            <TodoItem
+            <TodoItemComponent
               key={todo.id}
               todo={todo}
               onToggle={onToggle}

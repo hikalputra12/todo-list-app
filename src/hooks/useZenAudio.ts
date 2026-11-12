@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { AmbientSoundType } from '../types';
 import { createAudioBuffers, playBambooTap, playSingingBowl } from '../utils/audioSynthesizer';
 import { useLocalStorage } from './useLocalStorage';

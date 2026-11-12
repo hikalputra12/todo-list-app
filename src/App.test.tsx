@@ -6,5 +6,6 @@ describe('Project Setup Smoke Test', () => {
   it('renders Washi Focus title', () => {
     render(<App />);
     expect(screen.getByText('Washi Focus')).toBeInTheDocument();
+    expect(screen.getByText(/Waktu Tenang/i)).toBeInTheDocument();
   });
 });

@@ -1,0 +1,16 @@
+{
+  "name": "Washi Focus • 和紙フォーカス",
+  "short_name": "WashiFocus",
+  "description": "Cozy Japanese minimalist to-do list & study companion",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF9F5",
+  "theme_color": "#FBF9F5",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
