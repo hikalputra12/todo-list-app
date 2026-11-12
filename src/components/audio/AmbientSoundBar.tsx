@@ -24,10 +24,13 @@ export const AmbientSoundBar: React.FC<AmbientSoundBarProps> = ({
   ];
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-sm z-40 select-none">
-      <div className="flex items-center justify-between px-3 py-2 rounded-full bg-[#F5F1EB]/95 border border-[#E7E0D6] backdrop-blur-md shadow-lg shadow-black/5 transition-all">
+    <nav
+      aria-label="Ambient sound controls"
+      className="fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 w-[94%] max-w-[390px] z-40 select-none box-border"
+    >
+      <div className="flex items-center justify-between px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full bg-[#F5F1EB]/95 border border-[#E7E0D6] backdrop-blur-md shadow-lg shadow-black/5 transition-all overflow-hidden">
         {/* Sound Selection Chips */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 min-w-0">
           {soundOptions.map((opt) => {
             const isSelected = activeSound === opt.type;
             return (
@@ -37,22 +40,29 @@ export const AmbientSoundBar: React.FC<AmbientSoundBarProps> = ({
                 onClick={() => onSelectSound(opt.type)}
                 aria-label={opt.label}
                 title={opt.label}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs transition-all ${
+                className={`flex items-center gap-1.5 py-1.5 rounded-full transition-all shrink-0 ${
                   isSelected
-                    ? 'bg-[#C49767] text-white font-medium shadow-sm'
-                    : 'text-[#78716C] hover:text-[#2D2A26] hover:bg-[#EFE9DF]'
+                    ? 'px-3 bg-[#C49767] text-white font-medium shadow-sm'
+                    : 'px-2 text-[#78716C] hover:text-[#2D2A26] hover:bg-[#EFE9DF]'
                 }`}
               >
-                {opt.icon}
-                <span className="text-[11px] font-sans">{opt.label}</span>
+                <span className="shrink-0">{opt.icon}</span>
+                {/* On mobile: only active button shows text to prevent overflow; on sm+ screens, all show */}
+                <span
+                  className={`text-[11px] font-sans whitespace-nowrap transition-all ${
+                    isSelected ? 'inline' : 'hidden sm:inline'
+                  }`}
+                >
+                  {opt.label}
+                </span>
               </button>
             );
           })}
         </div>
 
-        {/* Volume Slider */}
-        <div className="flex items-center gap-1.5 pl-2 border-l border-[#E7E0D6]/80">
-          <Volume2 size={14} className="text-[#78716C] shrink-0" />
+        {/* Volume Slider - with shrink-0 and compact responsive width */}
+        <div className="flex items-center gap-1.5 pl-2 ml-1 border-l border-[#E7E0D6]/90 shrink-0">
+          <Volume2 size={13} className="text-[#78716C] shrink-0" />
           <input
             type="range"
             min="0"
@@ -61,10 +71,10 @@ export const AmbientSoundBar: React.FC<AmbientSoundBarProps> = ({
             value={volume}
             onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
             aria-label="Volume suara ambient"
-            className="w-16 h-1 bg-[#E7E0D6] rounded-lg appearance-none cursor-pointer accent-[#C49767]"
+            className="w-12 sm:w-16 h-1 bg-[#E7E0D6] rounded-lg appearance-none cursor-pointer accent-[#C49767] shrink-0"
           />
         </div>
       </div>
-    </div>
+    </nav>
   );
 };

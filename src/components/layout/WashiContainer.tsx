@@ -6,8 +6,8 @@ interface WashiContainerProps {
 
 export const WashiContainer: React.FC<WashiContainerProps> = ({ children }) => {
   return (
-    <div className="min-h-[100dvh] bg-[#FBF9F5] text-[#2D2A26] flex flex-col items-center washi-paper-bg selection:bg-[#E7E0D6] relative">
-      <main className="w-full max-w-md mx-auto px-5 pt-5 pb-28 flex flex-col min-h-[100dvh]">
+    <div className="min-h-[100dvh] bg-[#FBF9F5] text-[#2D2A26] flex flex-col items-center washi-paper-bg selection:bg-[#E7E0D6] relative overflow-x-hidden">
+      <main className="w-full max-w-md mx-auto px-3.5 sm:px-5 pt-4 sm:pt-5 pb-28 flex flex-col min-h-[100dvh] box-border">
         {children}
       </main>
     </div>

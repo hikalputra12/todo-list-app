@@ -40,11 +40,11 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
   return (
     <div className="flex flex-col items-center gap-3 mt-2 w-full">
       {/* Mode Switcher Tabs + Edit Button */}
-      <div className="flex items-center gap-1.5 p-1 rounded-full bg-[#F5F1EB] border border-[#E7E0D6] text-xs">
+      <div className="flex items-center gap-1 p-1 rounded-full bg-[#F5F1EB] border border-[#E7E0D6] text-[11px] sm:text-xs max-w-full overflow-hidden">
         <button
           type="button"
           onClick={() => onSwitchMode('focus')}
-          className={`px-3 py-1 rounded-full transition-all flex items-center gap-1 ${
+          className={`px-2.5 sm:px-3 py-1 rounded-full transition-all flex items-center gap-1 whitespace-nowrap ${
             mode === 'focus'
               ? 'bg-[#C49767] text-white font-medium shadow-sm'
               : 'text-[#78716C] hover:text-[#2D2A26]'
@@ -56,7 +56,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
         <button
           type="button"
           onClick={() => onSwitchMode('shortBreak')}
-          className={`px-3 py-1 rounded-full transition-all ${
+          className={`px-2.5 sm:px-3 py-1 rounded-full transition-all whitespace-nowrap ${
             mode === 'shortBreak'
               ? 'bg-[#C49767] text-white font-medium shadow-sm'
               : 'text-[#78716C] hover:text-[#2D2A26]'
@@ -68,7 +68,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
         <button
           type="button"
           onClick={() => onSwitchMode('longBreak')}
-          className={`px-3 py-1 rounded-full transition-all ${
+          className={`px-2.5 sm:px-3 py-1 rounded-full transition-all whitespace-nowrap ${
             mode === 'longBreak'
               ? 'bg-[#C49767] text-white font-medium shadow-sm'
               : 'text-[#78716C] hover:text-[#2D2A26]'
@@ -83,7 +83,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
           onClick={handleOpenModal}
           title="Atur durasi fokus"
           aria-label="Atur durasi fokus"
-          className="w-7 h-7 rounded-full flex items-center justify-center text-[#78716C] hover:text-[#2D2A26] hover:bg-[#EAE4D8] transition-colors"
+          className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-[#78716C] hover:text-[#2D2A26] hover:bg-[#EAE4D8] transition-colors"
         >
           <SlidersHorizontal size={13} />
         </button>

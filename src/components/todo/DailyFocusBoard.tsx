@@ -30,12 +30,12 @@ export const DailyFocusBoard: React.FC<DailyFocusBoardProps> = ({
   return (
     <section className="w-full my-4 flex flex-col">
       {/* Board Header & Progress Badge */}
-      <div className="flex items-center justify-between px-1 mb-2">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-serif font-medium tracking-wide text-[#2D2A26]">
+      <div className="flex items-center justify-between px-1 mb-2 flex-wrap gap-y-1">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <h2 className="text-xs sm:text-sm font-serif font-medium tracking-wide text-[#2D2A26]">
             Fokus Hari Ini
           </h2>
-          <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#F5F1EB] border border-[#E7E0D6] text-[#78716C]">
+          <span className="text-[10px] sm:text-[11px] font-mono px-1.5 sm:px-2 py-0.5 rounded-full bg-[#F5F1EB] border border-[#E7E0D6] text-[#78716C]">
             {completedCount}/{dailyTodos.length} selesai
           </span>
         </div>
@@ -44,9 +44,9 @@ export const DailyFocusBoard: React.FC<DailyFocusBoardProps> = ({
         <button
           type="button"
           onClick={onOpenBacklog}
-          className="flex items-center gap-1.5 text-xs text-[#78716C] hover:text-[#C49767] transition-colors py-1 px-2 rounded hover:bg-[#F5F1EB]"
+          className="flex items-center gap-1 text-[11px] sm:text-xs text-[#78716C] hover:text-[#C49767] transition-colors py-1 px-1.5 sm:px-2 rounded hover:bg-[#F5F1EB]"
         >
-          <BookOpen size={14} />
+          <BookOpen size={13} />
           <span>Pikiran Tersimpan</span>
           {backlogCount > 0 && (
             <span className="w-4 h-4 rounded-full bg-[#E7E0D6] text-[10px] font-mono flex items-center justify-center text-[#2D2A26]">
