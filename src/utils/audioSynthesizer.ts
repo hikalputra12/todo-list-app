@@ -12,9 +12,18 @@ export const createAudioBuffers = {
       b3 = 0.86650 * b3 + white * 0.3104856;
       b4 = 0.55000 * b4 + white * 0.5329522;
       b5 = -0.7616 * b5 - white * 0.0168980;
-      output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+      output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.28;
       b6 = white * 0.115926;
     }
+
+    // Seamless loop smoothing: crossfade first & last 1500 samples
+    const fadeSamples = Math.min(1500, Math.floor(bufferSize * 0.02));
+    for (let i = 0; i < fadeSamples; i++) {
+      const factor = i / fadeSamples;
+      output[i] *= factor;
+      output[bufferSize - 1 - i] *= factor;
+    }
+
     return output;
   },
 
@@ -27,8 +36,17 @@ export const createAudioBuffers = {
       const white = Math.random() * 2 - 1;
       output[i] = (lastOut + 0.02 * white) / 1.02;
       lastOut = output[i];
-      output[i] *= 3.5; // Compensate for volume drop
+      output[i] *= 5.5; // Compensate for volume drop & mobile speakers
     }
+
+    // Seamless loop smoothing
+    const fadeSamples = Math.min(1500, Math.floor(bufferSize * 0.02));
+    for (let i = 0; i < fadeSamples; i++) {
+      const factor = i / fadeSamples;
+      output[i] *= factor;
+      output[bufferSize - 1 - i] *= factor;
+    }
+
     return output;
   },
 };

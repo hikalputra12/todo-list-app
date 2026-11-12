@@ -27,11 +27,20 @@ export function useZenAudio() {
         ctxRef.current = new AudioCtx();
       }
     }
-    if (ctxRef.current && ctxRef.current.state === 'suspended') {
-      ctxRef.current.resume();
-    }
     return ctxRef.current;
   }, []);
+
+  const resumeContextIfNeeded = useCallback(async () => {
+    const ctx = getOrCreateContext();
+    if (ctx && ctx.state === 'suspended') {
+      try {
+        await ctx.resume();
+      } catch (err) {
+        console.warn('AudioContext resume failed:', err);
+      }
+    }
+    return ctx;
+  }, [getOrCreateContext]);
 
   const stopAmbient = useCallback(() => {
     if (sourceNodeRef.current) {
@@ -47,13 +56,13 @@ export function useZenAudio() {
   }, [setAmbientSettings]);
 
   const startAmbient = useCallback(
-    (sound: AmbientSoundType, volume = ambientSettings.volume) => {
+    async (sound: AmbientSoundType, volume = ambientSettings.volume) => {
       if (sound === 'none') {
         stopAmbient();
         return;
       }
 
-      const ctx = getOrCreateContext();
+      const ctx = await resumeContextIfNeeded();
       if (!ctx) return;
 
       // Stop previous ambient loop if playing
@@ -70,7 +79,7 @@ export function useZenAudio() {
       const bufferDuration = 5; // 5-second seamless loop
       let rawBufferData: Float32Array;
 
-      // Create procedural sound textures
+      // Create procedural sound textures tuned for clear audible warmth on mobile & desktop
       if (sound === 'gentle_rain') {
         rawBufferData = createAudioBuffers.createPinkNoise(sampleRate, bufferDuration);
       } else if (sound === 'bamboo_wind') {
@@ -82,31 +91,32 @@ export function useZenAudio() {
       }
 
       const audioBuffer = ctx.createBuffer(1, rawBufferData.length, sampleRate);
-      audioBuffer.copyToChannel(rawBufferData, 0);
+      audioBuffer.getChannelData(0).set(rawBufferData);
 
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
       source.loop = true;
 
-      // Filter shaping for warmth
+      // Filter shaping for warmth & clear presence on mobile phone speakers
       const filter = ctx.createBiquadFilter();
       if (sound === 'gentle_rain') {
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(850, ctx.currentTime);
+        filter.frequency.setValueAtTime(1800, ctx.currentTime);
       } else if (sound === 'bamboo_wind') {
         filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(400, ctx.currentTime);
-        filter.Q.setValueAtTime(0.8, ctx.currentTime);
+        filter.frequency.setValueAtTime(750, ctx.currentTime);
+        filter.Q.setValueAtTime(1.2, ctx.currentTime);
       } else if (sound === 'tea_room') {
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(320, ctx.currentTime);
+        filter.frequency.setValueAtTime(950, ctx.currentTime);
       } else {
         filter.type = 'lowpass';
         filter.frequency.setValueAtTime(1200, ctx.currentTime);
       }
 
       const gain = ctx.createGain();
-      gain.gain.setValueAtTime(volume * 0.5, ctx.currentTime);
+      const effectiveGain = Math.max(0.01, volume * 0.75);
+      gain.gain.setValueAtTime(effectiveGain, ctx.currentTime);
 
       source.connect(filter);
       filter.connect(gain);
@@ -125,33 +135,48 @@ export function useZenAudio() {
         volume,
       }));
     },
-    [ambientSettings.volume, getOrCreateContext, setAmbientSettings, stopAmbient]
+    [ambientSettings.volume, resumeContextIfNeeded, setAmbientSettings, stopAmbient]
   );
 
   const setVolume = useCallback(
     (newVolume: number) => {
       const clamped = Math.max(0, Math.min(1, newVolume));
       if (gainNodeRef.current && ctxRef.current) {
-        gainNodeRef.current.gain.setValueAtTime(clamped * 0.5, ctxRef.current.currentTime);
+        gainNodeRef.current.gain.setValueAtTime(clamped * 0.75, ctxRef.current.currentTime);
       }
       setAmbientSettings((prev) => ({ ...prev, volume: clamped }));
     },
     [setAmbientSettings]
   );
 
-  const playBambooClick = useCallback(() => {
-    const ctx = getOrCreateContext();
+  const playBambooClick = useCallback(async () => {
+    const ctx = await resumeContextIfNeeded();
     if (ctx) {
       playBambooTap(ctx);
     }
-  }, [getOrCreateContext]);
+  }, [resumeContextIfNeeded]);
 
-  const playChime = useCallback(() => {
-    const ctx = getOrCreateContext();
+  const playChime = useCallback(async () => {
+    const ctx = await resumeContextIfNeeded();
     if (ctx) {
       playSingingBowl(ctx);
     }
-  }, [getOrCreateContext]);
+  }, [resumeContextIfNeeded]);
+
+  // One-time unlock listener on touch/click for mobile browsers
+  useEffect(() => {
+    const unlockAudio = () => {
+      if (ctxRef.current && ctxRef.current.state === 'suspended') {
+        ctxRef.current.resume().catch(() => {});
+      }
+    };
+    window.addEventListener('touchstart', unlockAudio, { passive: true, once: true });
+    window.addEventListener('click', unlockAudio, { passive: true, once: true });
+    return () => {
+      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('click', unlockAudio);
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
