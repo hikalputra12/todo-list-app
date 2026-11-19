@@ -1,6 +1,12 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { AmbientSoundType } from '../types';
-import { createAudioBuffers, playBambooTap, playSingingBowl } from '../utils/audioSynthesizer';
+import {
+  createAudioBuffers,
+  createAlarmPattern,
+  ALARM_CYCLE_SECONDS,
+  playBambooTap,
+  playSingingBowl,
+} from '../utils/audioSynthesizer';
 import { useLocalStorage } from './useLocalStorage';
 
 export function useZenAudio() {
@@ -18,6 +24,10 @@ export function useZenAudio() {
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
   const filterNodeRef = useRef<BiquadFilterNode | null>(null);
+  const alarmSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const alarmActiveRef = useRef(false);
+  const alarmVibrateRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isAlarmRinging, setIsAlarmRinging] = useState(false);
 
   // Lazy initialize AudioContext on user gesture
   const getOrCreateContext = useCallback(() => {
@@ -163,20 +173,109 @@ export function useZenAudio() {
     }
   }, [resumeContextIfNeeded]);
 
-  // One-time unlock listener on touch/click for mobile browsers
+  /**
+   * Unlock audio during a user gesture (e.g. pressing "Mulai Fokus"), so the alarm can
+   * still play later when the timer runs out without any user interaction.
+   * iOS Safari additionally requires a sound to be started inside the gesture.
+   */
+  const primeAudio = useCallback(async () => {
+    const ctx = await resumeContextIfNeeded();
+    if (!ctx) return;
+    try {
+      const silent = ctx.createBuffer(1, 1, ctx.sampleRate || 44100);
+      const src = ctx.createBufferSource();
+      src.buffer = silent;
+      src.connect(ctx.destination);
+      src.start();
+    } catch {
+      // Ignore: priming is best-effort
+    }
+  }, [resumeContextIfNeeded]);
+
+  const stopAlarm = useCallback(() => {
+    alarmActiveRef.current = false;
+    if (alarmSourceRef.current) {
+      try {
+        alarmSourceRef.current.stop();
+        alarmSourceRef.current.disconnect();
+      } catch {
+        // Ignore if already stopped
+      }
+      alarmSourceRef.current = null;
+    }
+    if (alarmVibrateRef.current !== null) {
+      clearInterval(alarmVibrateRef.current);
+      alarmVibrateRef.current = null;
+    }
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate(0);
+    }
+    setIsAlarmRinging(false);
+  }, []);
+
+  /**
+   * Start a loud, looping alarm. It keeps ringing until `stopAlarm()` is called.
+   * Calling it while already ringing is a no-op (no stacked/overlapping alarms).
+   */
+  const startAlarm = useCallback(async () => {
+    if (alarmActiveRef.current) return;
+    alarmActiveRef.current = true;
+    setIsAlarmRinging(true);
+
+    // Vibrate on phones too (repeats every cycle until stopped)
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      const pattern = [180, 80, 180, 80, 180];
+      navigator.vibrate(pattern);
+      alarmVibrateRef.current = setInterval(() => navigator.vibrate(pattern), ALARM_CYCLE_SECONDS * 1000);
+    }
+
+    const ctx = await resumeContextIfNeeded();
+    // Stopped while we were waiting for the context to resume → don't start
+    if (!ctx || !alarmActiveRef.current || alarmSourceRef.current) return;
+
+    const sampleRate = ctx.sampleRate || 44100;
+    const data = createAlarmPattern(sampleRate);
+    const buffer = ctx.createBuffer(1, data.length, sampleRate);
+    buffer.getChannelData(0).set(data);
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+
+    // Full gain (independent of the ambient volume slider) + compressor to push loudness
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(1, ctx.currentTime);
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-12, ctx.currentTime);
+    compressor.knee.setValueAtTime(6, ctx.currentTime);
+    compressor.ratio.setValueAtTime(8, ctx.currentTime);
+    compressor.attack.setValueAtTime(0.002, ctx.currentTime);
+    compressor.release.setValueAtTime(0.1, ctx.currentTime);
+
+    source.connect(gain);
+    gain.connect(compressor);
+    compressor.connect(ctx.destination);
+    source.start();
+    alarmSourceRef.current = source;
+  }, [resumeContextIfNeeded]);
+
+  // Unlock (and create, if needed) the AudioContext on any user gesture for mobile browsers
   useEffect(() => {
     const unlockAudio = () => {
-      if (ctxRef.current && ctxRef.current.state === 'suspended') {
-        ctxRef.current.resume().catch(() => {});
+      const ctx = getOrCreateContext();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
       }
     };
-    window.addEventListener('touchstart', unlockAudio, { passive: true, once: true });
-    window.addEventListener('click', unlockAudio, { passive: true, once: true });
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    window.addEventListener('pointerdown', unlockAudio, { passive: true });
+    window.addEventListener('keydown', unlockAudio);
     return () => {
       window.removeEventListener('touchstart', unlockAudio);
-      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
     };
-  }, []);
+  }, [getOrCreateContext]);
 
   useEffect(() => {
     return () => {
@@ -187,6 +286,16 @@ export function useZenAudio() {
           // Ignore
         }
       }
+      if (alarmSourceRef.current) {
+        try {
+          alarmSourceRef.current.stop();
+        } catch {
+          // Ignore
+        }
+      }
+      if (alarmVibrateRef.current !== null) {
+        clearInterval(alarmVibrateRef.current);
+      }
     };
   }, []);
 
@@ -194,10 +303,14 @@ export function useZenAudio() {
     activeSound: ambientSettings.activeSound,
     volume: ambientSettings.volume,
     isPlaying: ambientSettings.isPlaying,
+    isAlarmRinging,
     startAmbient,
     stopAmbient,
     setVolume,
     playBambooClick,
     playChime,
+    primeAudio,
+    startAlarm,
+    stopAlarm,
   };
 }

@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { usePomodoro } from './usePomodoro';
@@ -69,5 +70,57 @@ describe('usePomodoro', () => {
     });
     expect(result.current.timerState.settings.focusDuration).toBe(50);
     expect(result.current.timerState.timeLeft).toBe(3000);
+  });
+
+  it('calls onComplete exactly once when time runs out (even under StrictMode)', () => {
+    const onComplete = vi.fn();
+    const { result } = renderHook(() => usePomodoro(onComplete), { wrapper: StrictMode });
+
+    act(() => {
+      result.current.setFocusDuration(1);
+    });
+    act(() => {
+      result.current.start();
+    });
+    act(() => {
+      vi.advanceTimersByTime(59_000);
+    });
+    expect(onComplete).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(2_000);
+    });
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(result.current.timerState.mode).toBe('shortBreak');
+    expect(result.current.timerState.isRunning).toBe(false);
+
+    // No repeated callbacks afterwards
+    act(() => {
+      vi.advanceTimersByTime(30_000);
+    });
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses the latest onComplete callback without restarting the countdown', () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const { result, rerender } = renderHook(({ cb }) => usePomodoro(cb), {
+      initialProps: { cb: first },
+    });
+
+    act(() => {
+      result.current.setFocusDuration(1);
+      result.current.start();
+    });
+    act(() => {
+      vi.advanceTimersByTime(30_000);
+    });
+    rerender({ cb: second });
+    act(() => {
+      vi.advanceTimersByTime(31_000);
+    });
+
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledTimes(1);
   });
 });

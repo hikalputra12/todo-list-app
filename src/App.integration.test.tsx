@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { StrictMode } from 'react';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import App from './App';
 
 describe('Washi Focus App Integration', () => {
@@ -25,5 +26,47 @@ describe('Washi Focus App Integration', () => {
 
     // Hanko seal character appears
     expect(screen.getByText('済')).toBeInTheDocument();
+  });
+
+  describe('time-up alarm', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      localStorage.setItem(
+        'washi_timer_settings_v1',
+        JSON.stringify({ focusDuration: 1, shortBreakDuration: 5, longBreakDuration: 15 })
+      );
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('rings when the timer runs out and keeps ringing until the user stops it', () => {
+      render(
+        <StrictMode>
+          <App />
+        </StrictMode>
+      );
+      expect(screen.getByText('01:00')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /Mulai timer/i }));
+      act(() => {
+        vi.advanceTimersByTime(61_000);
+      });
+
+      expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+      expect(screen.getByText('Waktu habis!')).toBeInTheDocument();
+
+      // Does not dismiss itself
+      act(() => {
+        vi.advanceTimersByTime(5 * 60_000);
+      });
+      expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /Hentikan Alarm/i }));
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      // Timer moved on to the break
+      expect(screen.getByText('05:00')).toBeInTheDocument();
+    });
   });
 });

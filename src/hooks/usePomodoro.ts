@@ -25,15 +25,33 @@ export function usePomodoro(onComplete?: () => void) {
     [settings]
   );
 
-  const [timerState, setTimerState] = useState<TimerState>({
+  const [timerState, setTimerState] = useState<TimerState & { completions: number }>({
     mode: 'focus',
     timeLeft: (settings.focusDuration || 25) * 60,
     isRunning: false,
     sessionsCompleted: 0,
     settings,
+    completions: 0,
   });
 
   const lastTimestampRef = useRef<number | null>(null);
+
+  // Keep the latest callback without restarting the countdown interval on every render
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  });
+
+  // timerState.completions is incremented (purely, inside the state updater) each time a
+  // session finishes. The side effect (alarm) fires from this effect → exactly once per completion.
+  const completionsRef = useRef(0);
+  useEffect(() => {
+    if (timerState.completions > completionsRef.current) {
+      completionsRef.current = timerState.completions;
+      lastTimestampRef.current = null;
+      onCompleteRef.current?.();
+    }
+  }, [timerState.completions]);
 
   const setFocusDuration = useCallback(
     (minutes: number) => {
@@ -96,13 +114,10 @@ export function usePomodoro(onComplete?: () => void) {
       if (delta >= 1) {
         lastTimestampRef.current = now;
         setTimerState((prev) => {
+          // A tick queued before the interval was cleaned up must not touch a stopped timer
+          if (!prev.isRunning) return prev;
           const nextTime = prev.timeLeft - delta;
           if (nextTime <= 0) {
-            clearInterval(interval);
-            lastTimestampRef.current = null;
-            if (onComplete) {
-              onComplete();
-            }
             // Auto transition
             const nextMode: TimerMode = prev.mode === 'focus' ? 'shortBreak' : 'focus';
             const nextSessions = prev.mode === 'focus' ? prev.sessionsCompleted + 1 : prev.sessionsCompleted;
@@ -112,6 +127,7 @@ export function usePomodoro(onComplete?: () => void) {
               timeLeft: getDurationForMode(nextMode),
               isRunning: false,
               sessionsCompleted: nextSessions,
+              completions: prev.completions + 1,
             };
           }
           return {
@@ -123,7 +139,7 @@ export function usePomodoro(onComplete?: () => void) {
     }, 500);
 
     return () => clearInterval(interval);
-  }, [timerState.isRunning, getDurationForMode, onComplete]);
+  }, [timerState.isRunning, getDurationForMode]);
 
   // Calculate visual progress 0 to 1
   const totalDuration = getDurationForMode(timerState.mode);

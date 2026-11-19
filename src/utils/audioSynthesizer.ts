@@ -51,6 +51,42 @@ export const createAudioBuffers = {
   },
 };
 
+/** Length of one alarm cycle (beep-beep-beep + pause). The buffer is looped until stopped. */
+export const ALARM_CYCLE_SECONDS = 1.6;
+export const ALARM_PEAK_AMPLITUDE = 0.95;
+
+/**
+ * Build one cycle of a loud alarm: three sharp alternating-pitch beeps followed by a short pause.
+ * Uses a soft-clipped (near-square) waveform, which is much louder on phone/laptop speakers
+ * than a pure sine at the same peak level. Designed to be played with `loop = true`.
+ */
+export function createAlarmPattern(sampleRate: number): Float32Array {
+  const total = Math.floor(sampleRate * ALARM_CYCLE_SECONDS);
+  const output = new Float32Array(total);
+
+  const beepSeconds = 0.18;
+  const gapSeconds = 0.08;
+  const freqs = [880, 1175, 880]; // A5 / D6: piercing range where small speakers are loudest
+  const rampSamples = Math.floor(sampleRate * 0.005); // 5ms fades avoid clicks
+  const drive = 4; // soft-clip drive → near-square wave
+  const norm = Math.tanh(drive);
+
+  freqs.forEach((freq, beepIdx) => {
+    const start = Math.floor(sampleRate * beepIdx * (beepSeconds + gapSeconds));
+    const length = Math.floor(sampleRate * beepSeconds);
+    for (let i = 0; i < length && start + i < total; i++) {
+      const t = i / sampleRate;
+      const raw = Math.tanh(drive * Math.sin(2 * Math.PI * freq * t)) / norm;
+      let env = 1;
+      if (i < rampSamples) env = i / rampSamples;
+      else if (i > length - rampSamples) env = (length - i) / rampSamples;
+      output[start + i] = raw * env * ALARM_PEAK_AMPLITUDE;
+    }
+  });
+
+  return output;
+}
+
 /**
  * Play an organic bamboo wood tap feedback sound (40ms)
  */

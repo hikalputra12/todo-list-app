@@ -6,6 +6,7 @@ import { useZenAudio } from './hooks/useZenAudio';
 import { WashiContainer } from './components/layout/WashiContainer';
 import { ZenHeader } from './components/layout/ZenHeader';
 import { EnsoTimer } from './components/timer/EnsoTimer';
+import { AlarmOverlay } from './components/timer/AlarmOverlay';
 import { DailyFocusBoard } from './components/todo/DailyFocusBoard';
 import { GentleBacklog } from './components/todo/GentleBacklog';
 import { AmbientSoundBar } from './components/audio/AmbientSoundBar';
@@ -21,16 +22,29 @@ export default function App() {
     activeSound,
     volume,
     isPlaying,
+    isAlarmRinging,
     startAmbient,
     setVolume,
     playBambooClick,
-    playChime,
+    primeAudio,
+    startAlarm,
+    stopAlarm,
   } = useZenAudio();
 
-  // Pomodoro Timer Hook
+  // Pomodoro Timer Hook: loud looping alarm when time is up, until the user stops it
   const { timerState, start, pause, reset, switchMode, setFocusDuration, progress } = usePomodoro(() => {
-    playChime();
+    startAlarm();
   });
+
+  const handleToggleTimer = useCallback(() => {
+    if (timerState.isRunning) {
+      pause();
+    } else {
+      // Unlock audio during this click so the alarm is allowed to play when time runs out
+      primeAudio();
+      start();
+    }
+  }, [timerState.isRunning, pause, start, primeAudio]);
 
   const dailyTodos = useMemo(() => todos.filter((t) => t.isDailyFocus), [todos]);
   const backlogTodos = useMemo(() => todos.filter((t) => !t.isDailyFocus), [todos]);
@@ -150,7 +164,7 @@ export default function App() {
         mode={timerState.mode}
         progress={progress}
         focusDuration={timerState.settings.focusDuration}
-        onToggle={() => (timerState.isRunning ? pause() : start())}
+        onToggle={handleToggleTimer}
         onReset={reset}
         onSwitchMode={switchMode}
         onSetFocusDuration={setFocusDuration}
@@ -187,6 +201,9 @@ export default function App() {
         onSelectSound={startAmbient}
         onVolumeChange={setVolume}
       />
+
+      {/* Time-up alarm: rings until the user presses "Hentikan Alarm" */}
+      <AlarmOverlay isRinging={isAlarmRinging} nextMode={timerState.mode} onStop={stopAlarm} />
 
       {/* Celebration Leaf Shower when all daily tasks complete */}
       <ZenCelebration
