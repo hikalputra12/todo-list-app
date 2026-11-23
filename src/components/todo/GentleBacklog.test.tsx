@@ -19,7 +19,6 @@ describe('GentleBacklog', () => {
         onAddBacklog={vi.fn()}
         onDelete={vi.fn()}
         onClearCompleted={vi.fn()}
-        isDailyFull={false}
       />
     );
     expect(screen.getByText('Ide Belajar Nanti')).toBeInTheDocument();
@@ -40,7 +39,6 @@ describe('GentleBacklog', () => {
         onAddBacklog={onAddBacklog}
         onDelete={vi.fn()}
         onClearCompleted={vi.fn()}
-        isDailyFull={false}
       />
     );
 
@@ -49,5 +47,34 @@ describe('GentleBacklog', () => {
     fireEvent.submit(input);
 
     expect(onAddBacklog).toHaveBeenCalledWith('Beli buku baru');
+  });
+
+  it('keeps promote button enabled even when daily focus already has 6 or more tasks', () => {
+    const onPromote = vi.fn();
+    const dailyTodos: TodoItem[] = Array.from({ length: 6 }, (_, idx) => ({
+      id: `d${idx + 1}`,
+      title: `Fokus ${idx + 1}`,
+      isCompleted: false,
+      createdAt: idx + 1,
+      isDailyFocus: true,
+      order: idx + 1,
+    }));
+
+    render(
+      <GentleBacklog
+        isOpen={true}
+        onClose={vi.fn()}
+        todos={[...dailyTodos, ...mockBacklog]}
+        onPromote={onPromote}
+        onAddBacklog={vi.fn()}
+        onDelete={vi.fn()}
+        onClearCompleted={vi.fn()}
+      />
+    );
+
+    const promoteBtn = screen.getByRole('button', { name: /Jadikan Fokus/i });
+    expect(promoteBtn).toBeEnabled();
+    fireEvent.click(promoteBtn);
+    expect(onPromote).toHaveBeenCalledWith('b1');
   });
 });

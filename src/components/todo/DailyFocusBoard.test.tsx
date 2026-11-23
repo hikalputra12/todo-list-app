@@ -12,7 +12,7 @@ describe('DailyFocusBoard', () => {
     { id: '5', title: 'Tugas 5', isCompleted: false, createdAt: 5, isDailyFocus: true, order: 5 },
   ];
 
-  it('renders all 5 active focus items', () => {
+  it('renders active focus items', () => {
     render(
       <DailyFocusBoard
         todos={mockTodos}
@@ -26,16 +26,30 @@ describe('DailyFocusBoard', () => {
     expect(screen.getByText('Tugas 5')).toBeInTheDocument();
   });
 
-  it('shows calm notification when cap of 5 is reached', () => {
+  it('allows adding more than 5 focus items without showing a cap notification', () => {
+    const eightTodos: TodoItem[] = Array.from({ length: 8 }, (_, idx) => ({
+      id: `${idx + 1}`,
+      title: `Tugas ${idx + 1}`,
+      isCompleted: false,
+      createdAt: idx + 1,
+      isDailyFocus: true,
+      order: idx + 1,
+    }));
+
     render(
       <DailyFocusBoard
-        todos={mockTodos}
+        todos={eightTodos}
         onToggle={vi.fn()}
         onAdd={vi.fn()}
         onDelete={vi.fn()}
         onOpenBacklog={vi.fn()}
       />
     );
-    expect(screen.getByText(/Pikiran hari ini sudah cukup penuh/i)).toBeInTheDocument();
+
+    for (let i = 1; i <= 8; i++) {
+      expect(screen.getByText(`Tugas ${i}`)).toBeInTheDocument();
+    }
+    expect(screen.queryByText(/sudah cukup penuh/i)).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Tulis satu hal yang ingin diselesaikan/i)).toBeInTheDocument();
   });
 });

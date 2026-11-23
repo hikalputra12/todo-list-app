@@ -4,7 +4,7 @@ export interface TodoItem {
   isCompleted: boolean;
   createdAt: number;
   completedAt?: number;
-  isDailyFocus: boolean; // true = 3-5 Fokus Hari Ini; false = Pikiran Tersimpan (Backlog)
+  isDailyFocus: boolean; // true = Fokus Hari Ini; false = Pikiran Tersimpan (Backlog)
   order: number;
 }
 

@@ -10,7 +10,6 @@ interface GentleBacklogProps {
   onAddBacklog: (title: string) => void;
   onDelete: (id: string) => void;
   onClearCompleted: () => void;
-  isDailyFull: boolean;
 }
 
 export const GentleBacklog: React.FC<GentleBacklogProps> = ({
@@ -21,7 +20,6 @@ export const GentleBacklog: React.FC<GentleBacklogProps> = ({
   onAddBacklog,
   onDelete,
   onClearCompleted,
-  isDailyFull,
 }) => {
   const [newText, setNewText] = useState('');
 
@@ -110,11 +108,10 @@ export const GentleBacklog: React.FC<GentleBacklogProps> = ({
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
-                    disabled={isDailyFull}
                     onClick={() => onPromote(item.id)}
                     aria-label="Jadikan Fokus"
-                    title={isDailyFull ? 'Fokus harian sudah penuh (maks 5)' : 'Pindahkan ke Fokus Hari Ini'}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#EFE9DF] hover:bg-[#E5DDCF] disabled:opacity-40 text-[#2D2A26] font-medium transition-colors text-[11px]"
+                    title="Pindahkan ke Fokus Hari Ini"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#EFE9DF] hover:bg-[#E5DDCF] text-[#2D2A26] font-medium transition-colors text-[11px]"
                   >
                     <span>Jadikan Fokus</span>
                     <ArrowUpRight size={12} />

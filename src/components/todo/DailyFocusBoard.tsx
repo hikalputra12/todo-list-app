@@ -2,7 +2,7 @@ import React from 'react';
 import { TodoItem } from '../../types';
 import { TodoItem as TodoItemComponent } from './TodoItem';
 import { TodoInput } from './TodoInput';
-import { BookOpen, Sparkles } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 
 interface DailyFocusBoardProps {
   todos: TodoItem[];
@@ -24,7 +24,6 @@ export const DailyFocusBoard: React.FC<DailyFocusBoardProps> = ({
   backlogCount = 0,
 }) => {
   const dailyTodos = todos.filter((t) => t.isDailyFocus);
-  const isCapReached = dailyTodos.length >= 5;
   const completedCount = dailyTodos.filter((t) => t.isCompleted).length;
 
   return (
@@ -56,24 +55,8 @@ export const DailyFocusBoard: React.FC<DailyFocusBoardProps> = ({
         </button>
       </div>
 
-      {/* Task input or cap notification */}
-      {isCapReached ? (
-        <div className="p-3 my-2 rounded-lg bg-[#F5F1EB] border border-[#E7E0D6] text-xs text-[#78716C] flex items-center justify-between animate-fadeIn">
-          <div className="flex items-center gap-2">
-            <Sparkles size={14} className="text-[#C49767]" />
-            <span>Pikiran hari ini sudah cukup penuh (5/5).</span>
-          </div>
-          <button
-            type="button"
-            onClick={onOpenBacklog}
-            className="text-[#C49767] hover:underline font-medium text-xs ml-2 shrink-0"
-          >
-            Tulis di Laci
-          </button>
-        </div>
-      ) : (
-        <TodoInput onAdd={onAdd} />
-      )}
+      {/* Task input */}
+      <TodoInput onAdd={onAdd} />
 
       {/* Todo items list */}
       <div className="flex flex-col mt-1">

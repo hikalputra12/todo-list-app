@@ -48,12 +48,10 @@ export default function App() {
 
   const dailyTodos = useMemo(() => todos.filter((t) => t.isDailyFocus), [todos]);
   const backlogTodos = useMemo(() => todos.filter((t) => !t.isDailyFocus), [todos]);
-  const isDailyFull = dailyTodos.length >= 5;
 
   // Add Task to Daily Focus
   const handleAddDaily = useCallback(
     (title: string) => {
-      if (dailyTodos.length >= 5) return;
       const newTodo: TodoItem = {
         id: `todo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         title,
@@ -128,13 +126,12 @@ export default function App() {
   // Promote Backlog Task to Daily Focus
   const handlePromote = useCallback(
     (id: string) => {
-      if (isDailyFull) return;
       setTodos((prev) =>
         prev.map((t) => (t.id === id ? { ...t, isDailyFocus: true } : t))
       );
       playBambooClick();
     },
-    [isDailyFull, setTodos, playBambooClick]
+    [setTodos, playBambooClick]
   );
 
   // Delete Task
@@ -170,7 +167,7 @@ export default function App() {
         onSetFocusDuration={setFocusDuration}
       />
 
-      {/* Daily 3-5 Focus List */}
+      {/* Daily Focus List */}
       <DailyFocusBoard
         todos={todos}
         onToggle={handleToggle}
@@ -190,7 +187,6 @@ export default function App() {
         onAddBacklog={handleAddBacklog}
         onDelete={handleDelete}
         onClearCompleted={handleClearCompleted}
-        isDailyFull={isDailyFull}
       />
 
       {/* Ambient Sound Dock */}

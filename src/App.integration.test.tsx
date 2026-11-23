@@ -28,6 +28,22 @@ describe('Washi Focus App Integration', () => {
     expect(screen.getByText('済')).toBeInTheDocument();
   });
 
+  it('allows adding unlimited daily focus tasks (more than 5)', () => {
+    render(<App />);
+
+    for (let i = 1; i <= 8; i++) {
+      const input = screen.getByPlaceholderText(/Tulis satu hal yang ingin diselesaikan/i);
+      fireEvent.change(input, { target: { value: `Tugas ${i}` } });
+      fireEvent.submit(input);
+    }
+
+    for (let i = 1; i <= 8; i++) {
+      expect(screen.getByText(`Tugas ${i}`)).toBeInTheDocument();
+    }
+    expect(screen.getByPlaceholderText(/Tulis satu hal yang ingin diselesaikan/i)).toBeInTheDocument();
+    expect(screen.getByText('0/8 selesai')).toBeInTheDocument();
+  });
+
   describe('time-up alarm', () => {
     beforeEach(() => {
       vi.useFakeTimers();
