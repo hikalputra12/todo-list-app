@@ -77,4 +77,36 @@ describe('GentleBacklog', () => {
     fireEvent.click(promoteBtn);
     expect(onPromote).toHaveBeenCalledWith('b1');
   });
+
+  it('allows editing a backlog item title and keeps drawer open on Escape inside edit input', () => {
+    const onClose = vi.fn();
+    const onEdit = vi.fn();
+
+    render(
+      <GentleBacklog
+        isOpen={true}
+        onClose={onClose}
+        todos={mockBacklog}
+        onPromote={vi.fn()}
+        onAddBacklog={vi.fn()}
+        onDelete={vi.fn()}
+        onEdit={onEdit}
+        onClearCompleted={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Ubah tugas/i }));
+    const editInput = screen.getByLabelText('Ubah judul tugas');
+    fireEvent.keyDown(editInput, { key: 'Escape' });
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onEdit).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /Ubah tugas/i }));
+    const editInput2 = screen.getByLabelText('Ubah judul tugas');
+    fireEvent.change(editInput2, { target: { value: 'Ide Diperbarui' } });
+    fireEvent.submit(editInput2);
+
+    expect(onEdit).toHaveBeenCalledWith('b1', 'Ide Diperbarui');
+  });
 });

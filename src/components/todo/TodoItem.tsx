@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TodoItem as TodoItemType } from '../../types';
-import { Trash2, Archive } from 'lucide-react';
+import { Trash2, Archive, Pencil } from 'lucide-react';
+import { EditableTitle } from './EditableTitle';
 
 interface TodoItemProps {
   todo: TodoItemType;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit?: (id: string, title: string) => void;
   onMoveToBacklog?: (id: string) => void;
 }
 
@@ -13,8 +15,11 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   todo,
   onToggle,
   onDelete,
+  onEdit,
   onMoveToBacklog,
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+
   return (
     <div
       className={`group flex items-center justify-between p-3.5 my-2 rounded-lg border transition-all duration-300 ${
@@ -24,8 +29,10 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       }`}
     >
       <div
-        className="flex items-center gap-3.5 flex-1 min-w-0 cursor-pointer select-none"
-        onClick={() => onToggle(todo.id)}
+        className={`flex items-center gap-3.5 flex-1 min-w-0 select-none ${
+          isEditing ? '' : 'cursor-pointer'
+        }`}
+        onClick={isEditing ? undefined : () => onToggle(todo.id)}
       >
         {/* Hanko Stamp / Checkbox */}
         <button
@@ -44,45 +51,72 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           ) : null}
         </button>
 
-        {/* Title */}
-        <span
-          className={`text-sm tracking-wide font-normal truncate transition-all duration-300 ${
-            todo.isCompleted ? 'line-through text-[#78716C] italic' : 'text-[#2D2A26]'
-          }`}
-        >
-          {todo.title}
-        </span>
+        {/* Title or inline editor */}
+        {isEditing ? (
+          <EditableTitle
+            initialValue={todo.title}
+            onSave={(nextTitle) => {
+              onEdit?.(todo.id, nextTitle);
+              setIsEditing(false);
+            }}
+            onCancel={() => setIsEditing(false)}
+          />
+        ) : (
+          <span
+            className={`text-sm tracking-wide font-normal truncate transition-all duration-300 ${
+              todo.isCompleted ? 'line-through text-[#78716C] italic' : 'text-[#2D2A26]'
+            }`}
+          >
+            {todo.title}
+          </span>
+        )}
       </div>
 
       {/* Action buttons (min tap target 44px on mobile) */}
-      <div className="flex items-center gap-1 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-        {onMoveToBacklog && (
+      {!isEditing && (
+        <div className="flex items-center gap-1 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+          {onEdit && (
+            <button
+              type="button"
+              title="Ubah tugas"
+              aria-label="Ubah tugas"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsEditing(true);
+              }}
+              className="w-8 h-8 flex items-center justify-center text-[#78716C] hover:text-[#C49767] transition-colors rounded"
+            >
+              <Pencil size={15} />
+            </button>
+          )}
+          {onMoveToBacklog && (
+            <button
+              type="button"
+              title="Simpan ke Pikiran Tersimpan"
+              aria-label="Pindahkan ke backlog"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveToBacklog(todo.id);
+              }}
+              className="w-8 h-8 flex items-center justify-center text-[#78716C] hover:text-[#C49767] transition-colors rounded"
+            >
+              <Archive size={15} />
+            </button>
+          )}
           <button
             type="button"
-            title="Simpan ke Pikiran Tersimpan"
-            aria-label="Pindahkan ke backlog"
+            title="Hapus tugas"
+            aria-label="Hapus tugas"
             onClick={(e) => {
               e.stopPropagation();
-              onMoveToBacklog(todo.id);
+              onDelete(todo.id);
             }}
-            className="w-8 h-8 flex items-center justify-center text-[#78716C] hover:text-[#C49767] transition-colors rounded"
+            className="w-8 h-8 flex items-center justify-center text-[#78716C] hover:text-[#B94938] transition-colors rounded"
           >
-            <Archive size={15} />
+            <Trash2 size={15} />
           </button>
-        )}
-        <button
-          type="button"
-          title="Hapus tugas"
-          aria-label="Hapus tugas"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(todo.id);
-          }}
-          className="w-8 h-8 flex items-center justify-center text-[#78716C] hover:text-[#B94938] transition-colors rounded"
-        >
-          <Trash2 size={15} />
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -143,6 +143,17 @@ export default function App() {
     [setTodos, playBambooClick]
   );
 
+  // Edit Task Title
+  const handleEdit = useCallback(
+    (id: string, title: string) => {
+      const trimmed = title.trim();
+      if (!trimmed) return;
+      setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, title: trimmed } : t)));
+      playBambooClick();
+    },
+    [setTodos, playBambooClick]
+  );
+
   // "Sapu Halaman" Ritual: Clear all completed tasks
   const handleClearCompleted = useCallback(() => {
     setTodos((prev) => prev.filter((t) => !t.isCompleted));
@@ -173,6 +184,7 @@ export default function App() {
         onToggle={handleToggle}
         onAdd={handleAddDaily}
         onDelete={handleDelete}
+        onEdit={handleEdit}
         onOpenBacklog={() => setIsBacklogOpen(true)}
         onMoveToBacklog={handleMoveToBacklog}
         backlogCount={backlogTodos.length}
@@ -186,6 +198,7 @@ export default function App() {
         onPromote={handlePromote}
         onAddBacklog={handleAddBacklog}
         onDelete={handleDelete}
+        onEdit={handleEdit}
         onClearCompleted={handleClearCompleted}
       />
 

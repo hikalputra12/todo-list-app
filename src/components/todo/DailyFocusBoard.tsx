@@ -9,6 +9,7 @@ interface DailyFocusBoardProps {
   onToggle: (id: string) => void;
   onAdd: (title: string) => void;
   onDelete: (id: string) => void;
+  onEdit?: (id: string, title: string) => void;
   onOpenBacklog: () => void;
   onMoveToBacklog?: (id: string) => void;
   backlogCount?: number;
@@ -19,6 +20,7 @@ export const DailyFocusBoard: React.FC<DailyFocusBoardProps> = ({
   onToggle,
   onAdd,
   onDelete,
+  onEdit,
   onOpenBacklog,
   onMoveToBacklog,
   backlogCount = 0,
@@ -71,6 +73,7 @@ export const DailyFocusBoard: React.FC<DailyFocusBoardProps> = ({
               todo={todo}
               onToggle={onToggle}
               onDelete={onDelete}
+              onEdit={onEdit}
               onMoveToBacklog={onMoveToBacklog}
             />
           ))

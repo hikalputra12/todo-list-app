@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TodoItem as TodoItemType } from '../../types';
-import { X, ArrowUpRight, Trash2, Sparkles, Wind } from 'lucide-react';
+import { X, ArrowUpRight, Trash2, Sparkles, Wind, Pencil } from 'lucide-react';
+import { EditableTitle } from './EditableTitle';
 
 interface GentleBacklogProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface GentleBacklogProps {
   onPromote: (id: string) => void;
   onAddBacklog: (title: string) => void;
   onDelete: (id: string) => void;
+  onEdit?: (id: string, title: string) => void;
   onClearCompleted: () => void;
 }
 
@@ -19,9 +21,17 @@ export const GentleBacklog: React.FC<GentleBacklogProps> = ({
   onPromote,
   onAddBacklog,
   onDelete,
+  onEdit,
   onClearCompleted,
 }) => {
   const [newText, setNewText] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setEditingId(null);
+    }
+  }, [isOpen]);
 
   // Close on Escape key
   useEffect(() => {
@@ -101,31 +111,57 @@ export const GentleBacklog: React.FC<GentleBacklogProps> = ({
                 key={item.id}
                 className="flex items-center justify-between p-3 rounded-lg bg-[#F5F1EB] border border-[#E7E0D6] text-xs transition-all"
               >
-                <span className="text-[#2D2A26] flex-1 truncate pr-2">
-                  {item.title}
-                </span>
+                {editingId === item.id ? (
+                  <EditableTitle
+                    initialValue={item.title}
+                    inputClassName="text-xs"
+                    onSave={(nextTitle) => {
+                      onEdit?.(item.id, nextTitle);
+                      setEditingId(null);
+                    }}
+                    onCancel={() => setEditingId(null)}
+                  />
+                ) : (
+                  <>
+                    <span className="text-[#2D2A26] flex-1 truncate pr-2">
+                      {item.title}
+                    </span>
 
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => onPromote(item.id)}
-                    aria-label="Jadikan Fokus"
-                    title="Pindahkan ke Fokus Hari Ini"
-                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#EFE9DF] hover:bg-[#E5DDCF] text-[#2D2A26] font-medium transition-colors text-[11px]"
-                  >
-                    <span>Jadikan Fokus</span>
-                    <ArrowUpRight size={12} />
-                  </button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => onPromote(item.id)}
+                        aria-label="Jadikan Fokus"
+                        title="Pindahkan ke Fokus Hari Ini"
+                        className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#EFE9DF] hover:bg-[#E5DDCF] text-[#2D2A26] font-medium transition-colors text-[11px]"
+                      >
+                        <span>Jadikan Fokus</span>
+                        <ArrowUpRight size={12} />
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={() => onDelete(item.id)}
-                    aria-label="Hapus dari backlog"
-                    className="w-7 h-7 flex items-center justify-center text-[#78716C] hover:text-[#B94938] transition-colors rounded"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
+                      {onEdit && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingId(item.id)}
+                          aria-label="Ubah tugas"
+                          title="Ubah tugas"
+                          className="w-7 h-7 flex items-center justify-center text-[#78716C] hover:text-[#C49767] transition-colors rounded"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => onDelete(item.id)}
+                        aria-label="Hapus dari backlog"
+                        className="w-7 h-7 flex items-center justify-center text-[#78716C] hover:text-[#B94938] transition-colors rounded"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))
           )}

@@ -44,6 +44,29 @@ describe('Washi Focus App Integration', () => {
     expect(screen.getByText('0/8 selesai')).toBeInTheDocument();
   });
 
+  it('allows editing an existing task title without toggling completion and persists to localStorage', () => {
+    render(<App />);
+
+    const addInput = screen.getByPlaceholderText(/Tulis satu hal yang ingin diselesaikan/i);
+    fireEvent.change(addInput, { target: { value: 'Belajar Bab 1' } });
+    fireEvent.submit(addInput);
+
+    expect(screen.getByText('Belajar Bab 1')).toBeInTheDocument();
+    expect(screen.getByText('0/1 selesai')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Ubah tugas/i }));
+    const editInput = screen.getByLabelText('Ubah judul tugas');
+    fireEvent.change(editInput, { target: { value: 'Belajar Bab 2' } });
+    fireEvent.submit(editInput);
+
+    expect(screen.getByText('Belajar Bab 2')).toBeInTheDocument();
+    expect(screen.queryByText('Belajar Bab 1')).not.toBeInTheDocument();
+    expect(screen.getByText('0/1 selesai')).toBeInTheDocument();
+
+    const stored = JSON.parse(localStorage.getItem('washi_todos_v1')!);
+    expect(stored[0].title).toBe('Belajar Bab 2');
+  });
+
   describe('time-up alarm', () => {
     beforeEach(() => {
       vi.useFakeTimers();
